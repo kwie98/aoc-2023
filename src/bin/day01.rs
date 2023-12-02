@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, LinkedList},
-    fs,
-};
+use std::{collections::HashMap, fs};
 
 use once_cell::sync::Lazy;
 
@@ -58,28 +55,23 @@ fn parse_line_1(line: &str) -> u32 {
 }
 
 fn parse_line_2(line: &str) -> u32 {
-    let mut digits: LinkedList<char> = LinkedList::new();
-    let mut chars = line.chars();
-    for i in 0..line.len() {
+    let mut digits = line.chars().enumerate().filter_map(|(i, c)| {
         // First, check if we have a simple digit:
-        let current_char = chars.next().unwrap_or_else(|| panic!("Out of bounds"));
-        if current_char.is_ascii_digit() {
-            digits.push_back(current_char);
-            continue;
-        };
-
+        if c.is_ascii_digit() {
+            return Some(c);
+        }
         // Otherwise, check if a digit name starts at this position:
         for &name in DIGITS.keys() {
             let name_starts_here = line
                 .get(i..i + name.len())
-                .map(|substr| substr == name)
-                .is_some_and(|b| b);
+                .is_some_and(|sub| sub == name);
             if name_starts_here {
-                digits.push_back(*DIGITS.get(name).unwrap_or_else(|| panic!("ayo")))
+                return DIGITS.get(name).copied();
             }
         }
-    }
-    return concat_first_last(&mut digits.into_iter())
+        return None;
+    });
+    return concat_first_last(&mut digits)
         .unwrap_or_else(|| panic!("Could not parse line {}", line));
 }
 
